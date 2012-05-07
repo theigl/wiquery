@@ -4,15 +4,10 @@ import org.apache.wicket.Application;
 import org.apache.wicket.request.resource.IResource;
 import org.apache.wicket.request.resource.JavaScriptPackageResource;
 import org.apache.wicket.request.resource.ResourceReference;
-import org.apache.wicket.request.resource.caching.FilenameWithVersionResourceCachingStrategy;
-import org.apache.wicket.request.resource.caching.IResourceCachingStrategy;
-import org.apache.wicket.request.resource.caching.IStaticCacheableResource;
-import org.apache.wicket.request.resource.caching.version.IResourceVersion;
 import org.apache.wicket.resource.dependencies.AbstractResourceDependentResourceReference;
 import org.apache.wicket.util.lang.Packages;
 import org.apache.wicket.util.resource.IResourceStream;
 import org.apache.wicket.util.resource.locator.IResourceStreamLocator;
-import org.apache.wicket.util.string.Strings;
 import org.odlabs.wiquery.core.WiQuerySettings;
 
 import java.util.Locale;
@@ -29,8 +24,6 @@ import java.util.Locale;
  */
 public class WiQueryJavaScriptResourceReference extends AbstractResourceDependentResourceReference {
 	private static final long serialVersionUID = 1L;
-
-	private static final String JQUERY_UI_VERSION = "1.8.18";
 
 	private Boolean minified = null;
 
@@ -79,23 +72,6 @@ public class WiQueryJavaScriptResourceReference extends AbstractResourceDependen
 		return name;
 	}
 
-	@Override
-	public ResourceType getResourceType() {
-		String extension = getExtension();
-		final ResourceType type;
-		if (Strings.isEmpty(extension)) {
-			type = ResourceType.PLAIN;
-		} else if (extension.equals("css")) {
-			type = ResourceType.CSS;
-		} else if (extension.equals("js")) {
-			type = ResourceType.JS;
-		} else {
-			throw new IllegalStateException("Cannot determine the resource's type by its extension: " +
-					extension);
-		}
-		return type;
-	}
-
 	public static boolean isMinifiedJavaScriptResources() {
 		return WiQuerySettings.get().isMinifiedJavaScriptResources();
 	}
@@ -108,19 +84,7 @@ public class WiQueryJavaScriptResourceReference extends AbstractResourceDependen
 
 	@Override
 	public IResource getResource() {
-		return new JavaScriptPackageResource(getScope(), getName(), getLocale(), getStyle(), getVariation()) {
-			@Override
-			protected IResourceCachingStrategy getCachingStrategy() {
-				if (!getScope().getName().contains("org.odlabs.wiquery.ui")) {
-					return super.getCachingStrategy();
-				}
-				return new FilenameWithVersionResourceCachingStrategy(new IResourceVersion() {
-					public String getVersion(IStaticCacheableResource resource) {
-						return JQUERY_UI_VERSION;
-					}
-				});
-			}
-		};
+		return new JavaScriptPackageResource(getScope(), getName(), getLocale(), getStyle(), getVariation());
 	}
 
 	public boolean isWiQuery() {
