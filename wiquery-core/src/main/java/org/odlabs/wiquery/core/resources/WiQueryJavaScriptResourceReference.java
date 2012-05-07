@@ -8,6 +8,7 @@ import org.apache.wicket.resource.dependencies.AbstractResourceDependentResource
 import org.apache.wicket.util.lang.Packages;
 import org.apache.wicket.util.resource.IResourceStream;
 import org.apache.wicket.util.resource.locator.IResourceStreamLocator;
+import org.apache.wicket.util.string.Strings;
 import org.odlabs.wiquery.core.WiQuerySettings;
 
 import java.util.Locale;
@@ -106,6 +107,30 @@ public class WiQueryJavaScriptResourceReference extends AbstractResourceDependen
 			return name + "?ui=" + JQUERY_UI_VERSION;
 		}
 		return name;
+	}
+
+	@Override
+	public ResourceType getResourceType() {
+		String extension = getExtension();
+		final ResourceType type;
+		if (Strings.isEmpty(extension))
+		{
+			type = ResourceType.PLAIN;
+		}
+		else if (extension.equals("css"))
+		{
+			type = ResourceType.CSS;
+		}
+		else if (extension.equals("js"))
+		{
+			type = ResourceType.JS;
+		}
+		else
+		{
+			throw new IllegalStateException("Cannot determine the resource's type by its extension: " +
+					extension);
+		}
+		return type;
 	}
 
 	public static boolean isMinifiedJavaScriptResources()

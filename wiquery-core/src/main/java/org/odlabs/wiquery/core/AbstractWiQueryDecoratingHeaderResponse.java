@@ -1,11 +1,5 @@
 package org.odlabs.wiquery.core;
 
-import java.util.Comparator;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Queue;
-import java.util.concurrent.ConcurrentLinkedQueue;
-
 import org.apache.wicket.markup.html.IHeaderResponse;
 import org.apache.wicket.request.Response;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
@@ -25,6 +19,12 @@ import org.odlabs.wiquery.core.ui.ICoreUIStyleSheetResourceReference;
 import org.odlabs.wiquery.core.util.WiQueryUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.Comparator;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
  * <p>
@@ -186,6 +186,8 @@ public abstract class AbstractWiQueryDecoratingHeaderResponse
 				+ "});", null);
 		addThingToBeRendered(token);
 	}
+
+
 
 	/**
 	 * Contribute all plain javascripts, plain css and strings.
