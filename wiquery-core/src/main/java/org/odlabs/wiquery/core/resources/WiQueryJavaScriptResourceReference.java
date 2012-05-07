@@ -1,7 +1,5 @@
 package org.odlabs.wiquery.core.resources;
 
-import java.util.Locale;
-
 import org.apache.wicket.Application;
 import org.apache.wicket.request.resource.IResource;
 import org.apache.wicket.request.resource.JavaScriptPackageResource;
@@ -11,6 +9,8 @@ import org.apache.wicket.util.lang.Packages;
 import org.apache.wicket.util.resource.IResourceStream;
 import org.apache.wicket.util.resource.locator.IResourceStreamLocator;
 import org.odlabs.wiquery.core.WiQuerySettings;
+
+import java.util.Locale;
 
 /**
  * <p>
@@ -37,6 +37,8 @@ import org.odlabs.wiquery.core.WiQuerySettings;
 public class WiQueryJavaScriptResourceReference extends AbstractResourceDependentResourceReference
 {
 	private static final long serialVersionUID = 1L;
+
+	private static final String JQUERY_UI_VERSION = "1.8.18";
 
 	private Boolean minified = null;
 
@@ -87,12 +89,22 @@ public class WiQueryJavaScriptResourceReference extends AbstractResourceDependen
 	@Override
 	public String getName()
 	{
-		String name = super.getName();
-		String minifiedName = name.substring(0, name.length() - 2) + "min.js";
+		return appendVersionQueryString(getScope(), getActualName(super.getName()));
+	}
+
+	private String getActualName(final String baseName) {
+		String minifiedName = baseName.substring(0, baseName.length() - 2) + "min.js";
 		if (minified == null)
 			minified = isMinifiedJavaScriptResources() && exists(getScope(), minifiedName);
 		if (minified)
 			return minifiedName;
+		return baseName;
+	}
+
+	private static String appendVersionQueryString(Class<?> scope, String name) {
+		if (scope.getName().contains("org.odlabs.wiquery.ui")) {
+			return name + "?ui=" + JQUERY_UI_VERSION;
+		}
 		return name;
 	}
 
