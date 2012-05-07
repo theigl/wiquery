@@ -4,6 +4,10 @@ import org.apache.wicket.Application;
 import org.apache.wicket.request.resource.IResource;
 import org.apache.wicket.request.resource.JavaScriptPackageResource;
 import org.apache.wicket.request.resource.ResourceReference;
+import org.apache.wicket.request.resource.caching.FilenameWithVersionResourceCachingStrategy;
+import org.apache.wicket.request.resource.caching.IResourceCachingStrategy;
+import org.apache.wicket.request.resource.caching.IStaticCacheableResource;
+import org.apache.wicket.request.resource.caching.version.IResourceVersion;
 import org.apache.wicket.resource.dependencies.AbstractResourceDependentResourceReference;
 import org.apache.wicket.util.lang.Packages;
 import org.apache.wicket.util.resource.IResourceStream;
@@ -14,29 +18,16 @@ import org.odlabs.wiquery.core.WiQuerySettings;
 import java.util.Locale;
 
 /**
- * <p>
- * {@link ResourceReference} which checks the {@link WiQuerySettings} if the resources
- * needs to fetch the normal (non-minimized) version or the minimized version.
- * </p>
- * <p>
- * Note that this ResourceReference only loads files and does not minify on the fly.
- * </p>
- * <p>
- * Always provide the normal (non-minimized) version, wiquery will reference to the
- * minimized version when {@link WiQuerySettings#isMinifiedJavaScriptResources()} is true.
- * </p>
- * <p>
- * The filename format for the 2 versions is:
- * <ul>
- * <li>Normal version: <i>foo.js</i> / <i>foo.css</i></li>
- * <li>Minimized version: <i>foo.min.js</i> / <i>foo.min.css</i></li>
- * </ul>
- * </p>
- * 
+ * <p> {@link ResourceReference} which checks the {@link WiQuerySettings} if the resources needs to fetch the normal
+ * (non-minimized) version or the minimized version. </p> <p> Note that this ResourceReference only loads files and does
+ * not minify on the fly. </p> <p> Always provide the normal (non-minimized) version, wiquery will reference to the
+ * minimized version when {@link WiQuerySettings#isMinifiedJavaScriptResources()} is true. </p> <p> The filename format
+ * for the 2 versions is: <ul> <li>Normal version: <i>foo.js</i> / <i>foo.css</i></li> <li>Minimized version:
+ * <i>foo.min.js</i> / <i>foo.min.css</i></li> </ul> </p>
+ *
  * @author Hielke Hoeve
  */
-public class WiQueryJavaScriptResourceReference extends AbstractResourceDependentResourceReference
-{
+public class WiQueryJavaScriptResourceReference extends AbstractResourceDependentResourceReference {
 	private static final long serialVersionUID = 1L;
 
 	private static final String JQUERY_UI_VERSION = "1.8.18";
@@ -45,67 +36,46 @@ public class WiQueryJavaScriptResourceReference extends AbstractResourceDependen
 
 	/**
 	 * Construct.
-	 * 
-	 * @param scope
-	 *            mandatory parameter
-	 * @param name
-	 *            mandatory parameter
-	 * @param locale
-	 *            resource locale
-	 * @param style
-	 *            resource style
-	 * @param variation
-	 *            resource variation
+	 *
+	 * @param scope mandatory parameter
+	 * @param name mandatory parameter
+	 * @param locale resource locale
+	 * @param style resource style
+	 * @param variation resource variation
 	 */
-	public WiQueryJavaScriptResourceReference(Class< ? > scope, String name, Locale locale,
-			String style, String variation)
-	{
+	public WiQueryJavaScriptResourceReference(Class<?> scope, String name, Locale locale,
+											  String style, String variation) {
 		super(scope, name, locale, style, variation);
 	}
 
 	/**
 	 * Construct.
-	 * 
-	 * @param scope
-	 *            mandatory parameter
-	 * @param name
-	 *            mandatory parameter
+	 *
+	 * @param scope mandatory parameter
+	 * @param name mandatory parameter
 	 */
-	public WiQueryJavaScriptResourceReference(Class< ? > scope, String name)
-	{
+	public WiQueryJavaScriptResourceReference(Class<?> scope, String name) {
 		super(scope, name);
 	}
 
-	private boolean exists(Class< ? > scope, String name)
-	{
+	private boolean exists(Class<?> scope, String name) {
 		IResourceStreamLocator locator =
-			Application.get().getResourceSettings().getResourceStreamLocator();
+				Application.get().getResourceSettings().getResourceStreamLocator();
 		String absolutePath = Packages.absolutePath(scope, name);
 		IResourceStream stream =
-			locator
-				.locate(scope, absolutePath, getStyle(), getVariation(), getLocale(), null, true);
+				locator
+						.locate(scope, absolutePath, getStyle(), getVariation(), getLocale(), null, true);
 		return stream != null;
 	}
 
 	@Override
-	public String getName()
-	{
-		return appendVersionQueryString(getScope(), getActualName(super.getName()));
-	}
-
-	private String getActualName(final String baseName) {
-		String minifiedName = baseName.substring(0, baseName.length() - 2) + "min.js";
+	public String getName() {
+		String name = super.getName();
+		String minifiedName = name.substring(0, name.length() - 2) + "min.js";
 		if (minified == null)
 			minified = isMinifiedJavaScriptResources() && exists(getScope(), minifiedName);
 		if (minified)
 			return minifiedName;
-		return baseName;
-	}
-
-	private static String appendVersionQueryString(Class<?> scope, String name) {
-		if (scope.getName().contains("org.odlabs.wiquery.ui")) {
-			return name + "?ui=" + JQUERY_UI_VERSION;
-		}
 		return name;
 	}
 
@@ -113,50 +83,47 @@ public class WiQueryJavaScriptResourceReference extends AbstractResourceDependen
 	public ResourceType getResourceType() {
 		String extension = getExtension();
 		final ResourceType type;
-		if (Strings.isEmpty(extension))
-		{
+		if (Strings.isEmpty(extension)) {
 			type = ResourceType.PLAIN;
-		}
-		else if (extension.equals("css"))
-		{
+		} else if (extension.equals("css")) {
 			type = ResourceType.CSS;
-		}
-		else if (extension.equals("js"))
-		{
+		} else if (extension.equals("js")) {
 			type = ResourceType.JS;
-		}
-		else
-		{
+		} else {
 			throw new IllegalStateException("Cannot determine the resource's type by its extension: " +
 					extension);
 		}
 		return type;
 	}
 
-	public static boolean isMinifiedJavaScriptResources()
-	{
+	public static boolean isMinifiedJavaScriptResources() {
 		return WiQuerySettings.get().isMinifiedJavaScriptResources();
 	}
 
-	/**
-	 * @return default an empty list as all subclasses must implement this to fit their
-	 *         own needs.
-	 */
+	/** @return default an empty list as all subclasses must implement this to fit their own needs. */
 	@Override
-	public AbstractResourceDependentResourceReference[] getDependentResourceReferences()
-	{
+	public AbstractResourceDependentResourceReference[] getDependentResourceReferences() {
 		return new AbstractResourceDependentResourceReference[0];
 	}
 
 	@Override
-	public IResource getResource()
-	{
-		return new JavaScriptPackageResource(getScope(), getName(), getLocale(), getStyle(),
-			getVariation());
+	public IResource getResource() {
+		return new JavaScriptPackageResource(getScope(), getName(), getLocale(), getStyle(), getVariation()) {
+			@Override
+			protected IResourceCachingStrategy getCachingStrategy() {
+				if (!getScope().getName().contains("org.odlabs.wiquery.ui")) {
+					return super.getCachingStrategy();
+				}
+				return new FilenameWithVersionResourceCachingStrategy(new IResourceVersion() {
+					public String getVersion(IStaticCacheableResource resource) {
+						return JQUERY_UI_VERSION;
+					}
+				});
+			}
+		};
 	}
 
-	public boolean isWiQuery()
-	{
+	public boolean isWiQuery() {
 		return getClass().getPackage().getName().startsWith("org.odlabs.wiquery");
 	}
 }
